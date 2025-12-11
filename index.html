@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار اللغة العربية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Markazi+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Markazi Text', serif;
+            background-color: #2c3e50;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            padding: 10px;
+            transition: opacity 0.3s;
+        }
+
+        /* MOBİL (9:16) */
+        @media (max-width: 768px) {
+            .game-container { width: 100vw; height: 100vh; }
+            .header-instruction { font-size: 1.4rem; flex: 0.6 !important;}
+            .question-area { font-size: 3.5rem; }
+            .option-btn { font-size: 2rem; }
+            .nav-btn { font-size: 1.5rem; padding: 10px 20px !important; }
+            .result-title { font-size: 3rem; }
+        }
+
+        /* MASAÜSTÜ (16:9) */
+        @media (min-width: 769px) {
+            .game-container {
+                width: 90vw;
+                aspect-ratio: 16 / 9;
+                max-height: 90vh;
+                border-radius: 20px;
+                padding: 20px;
+            }
+            .header-instruction { font-size: 2rem; }
+            .question-area { font-size: 6rem; }
+            .option-btn { font-size: 3rem; }
+            .nav-btn { font-size: 2rem; padding: 10px 40px !important; }
+            .result-title { font-size: 5rem; }
+        }
+
+        /* YÖNERGE ALANI */
+        .header-instruction {
+            flex: 0.7;
+            background-color: #f1c40f;
+            color: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-radius: 10px;
+            padding: 0 15px;
+            font-weight: 600;
+        }
+
+        /* SORU ALANI */
+        .question-area {
+            flex: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            font-weight: 700;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        /* ŞIKLAR ALANI */
+        .options-area {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 10px;
+            overflow-y: auto; 
+        }
+
+        .option-btn {
+            flex: 1;
+            font-family: 'Markazi Text', serif;
+            font-weight: 600;
+            background-color: #ecf0f1;
+            border: 2px solid #bdc3c7;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            color: #2c3e50;
+        }
+
+        .option-btn:active { transform: scale(0.98); }
+
+        /* NAVİGASYON (İLERİ/GERİ) ALANI */
+        .controls-area {
+            flex: 0.8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+
+        .nav-btn {
+            min-width: 140px;
+            font-family: 'Markazi Text', serif;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #34495e;
+            color: white;
+            transition: background 0.3s;
+        }
+        
+        .nav-btn:hover:not(:disabled) { background-color: #2c3e50; }
+        
+        .nav-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .next-btn { background-color: #2980b9; }
+        .next-btn:hover:not(:disabled) { background-color: #1abc9c; }
+
+        /* RENKLER */
+        .correct { background-color: #2ecc71 !important; border-color: #27ae60 !important; color: white !important; }
+        .wrong { background-color: #e74c3c !important; border-color: #c0392b !important; color: white !important; }
+
+        /* SONUÇ EKRANI */
+        .end-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .result-title { color: #2c3e50; margin-bottom: 20px; }
+        .score-text { font-size: 2.5rem; color: #2980b9; margin-bottom: 20px; }
+
+        .mistakes-container {
+            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            margin-bottom: 20px;
+        }
+
+        .mistake-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-right: 5px solid #e74c3c;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            font-size: 1.8rem;
+        }
+
+        .mistake-q { font-weight: bold; margin-bottom: 5px; color: #333; }
+        .mistake-user { color: #e74c3c; font-size: 1.5rem; }
+        .mistake-correct { color: #27ae60; font-size: 1.5rem; }
+
+        .restart-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #2c3e50;
+            transition: transform 0.3s, color 0.3s;
+            padding: 10px;
+        }
+
+        .restart-icon-btn svg { width: 60px; height: 60px; fill: currentColor; }
+        .restart-icon-btn:hover { transform: rotate(180deg); color: #e67e22; }
+
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="quiz-box">
+        <div class="header-instruction">
+            أَكْمِل الجُمَل الآتِيَة بِالكَلِمات المُناسِبَة مِمّا بَيْن القَوْسَيْن كَما في المِثال
+        </div>
+
+        <div class="question-area" id="question-text"></div>
+        <div class="options-area" id="options-box"></div>
+
+        <div class="controls-area">
+            <button class="nav-btn next-btn" id="next-btn" onclick="nextQuestion()">التّالي</button>
+            <div style="font-size: 1.5rem; color: #7f8c8d;" id="q-counter"></div>
+            <button class="nav-btn" id="prev-btn" onclick="prevQuestion()">السّابِق</button>
+        </div>
+    </div>
+    
+    <div class="game-container end-screen" id="end-box">
+        <div class="result-title">اِنْتَهى الِاخْتِبار!</div>
+        <div class="score-text" id="final-score"></div>
+        <div class="mistakes-container" id="mistakes-list"></div>
+        <button class="restart-icon-btn" onclick="location.reload()" title="إِعادَة">
+            <svg viewBox="0 0 24 24">
+                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // --- SES SİSTEMİ ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            osc.type = 'sine'; 
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(1000, now + 0.1);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'wrong') {
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'click') {
+                osc.frequency.setValueAtTime(400, now);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+        }
+
+        // --- SORU HAVUZU ---
+        const questions = [
+            { 
+                text: "....... عامِلون", 
+                options: ["أَنْتُنّ", "أَنْتُم", "هُما"], 
+                correctIndex: 1 
+            },
+            { 
+                text: "أَنْتُما .......", 
+                options: ["مُوَظَّفون", "مُتَقاعِدَة", "مُمَرِّضَتان"], 
+                correctIndex: 2 
+            },
+            { 
+                text: "....... طَبيبات", 
+                options: ["أَنْتُنّ", "أَنْتُم", "أَنا"], 
+                correctIndex: 0 
+            },
+            { 
+                text: "أَنْتِ ........", 
+                options: ["مُدَرِّسَة", "مُهَنْدِس", "مُتَقاعِد"], 
+                correctIndex: 0 
+            },
+            { 
+                text: "...... مُهَنْدِسان", 
+                options: ["أَنْتَ", "أَنْتُما", "أَنْتُنّ"], 
+                correctIndex: 1 
+            },
+            { 
+                text: "أَنْتَ .......", 
+                options: ["مُدَرِّس", "مُعَلِّمَة", "طَبّاخَة"], 
+                correctIndex: 0 
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = new Array(questions.length).fill(null); 
+
+        // --- NOKTA MANTIĞI DÜZENLEME ---
+        function formatText(text) {
+            let t = text.trim();
+            
+            // 1. Durum: Cümle ".." (boşluk doldurma noktaları) ile bitiyorsa
+            // Noktaların karışmaması için araya boşluk koyup cümle sonu noktası ekliyoruz.
+            if (t.endsWith('..')) {
+                return t + ' .';
+            }
+
+            // 2. Durum: Cümle harfle bitiyorsa (nokta yoksa)
+            // Kelimeye bitişik nokta ekliyoruz.
+            if (!t.endsWith('.')) {
+                return t + '.';
+            }
+
+            // 3. Durum: Zaten tek nokta varsa dokunmuyoruz.
+            return t;
+        }
+
+        function loadQuestion() {
+            const questionData = questions[currentQuestionIndex];
+            const questionEl = document.getElementById('question-text');
+            const optionsBox = document.getElementById('options-box');
+            const counterEl = document.getElementById('q-counter');
+
+            // Formatlanmış metni kullan (Nokta mantığı burada devreye girer)
+            questionEl.innerText = formatText(questionData.text);
+            counterEl.innerText = (currentQuestionIndex + 1) + " / " + questions.length;
+
+            optionsBox.innerHTML = '';
+            questionData.options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = option;
+                
+                const savedAnswerIndex = userAnswers[currentQuestionIndex];
+
+                if (savedAnswerIndex !== null) {
+                    btn.disabled = true;
+                    if (index === questionData.correctIndex) {
+                        btn.classList.add('correct');
+                    } else if (index === savedAnswerIndex) {
+                        btn.classList.add('wrong');
+                    }
+                } else {
+                    btn.onclick = () => checkAnswer(index);
+                }
+                optionsBox.appendChild(btn);
+            });
+
+            updateNavButtons();
+        }
+
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestionIndex];
+            const isCorrect = (selectedIndex === question.correctIndex);
+            
+            if (isCorrect) {
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            userAnswers[currentQuestionIndex] = selectedIndex;
+            loadQuestion(); 
+        }
+
+        function updateNavButtons() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+
+            prevBtn.disabled = (currentQuestionIndex === 0);
+
+            if (userAnswers[currentQuestionIndex] === null) {
+                nextBtn.disabled = true;
+                nextBtn.innerText = "التّالي";
+            } else {
+                nextBtn.disabled = false;
+                if (currentQuestionIndex === questions.length - 1) {
+                    nextBtn.innerText = "إِنْهاء"; 
+                } else {
+                    nextBtn.innerText = "التّالي";
+                }
+            }
+        }
+
+        function nextQuestion() {
+            playSound('click'); 
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function prevQuestion() {
+            playSound('click'); 
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadQuestion();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quiz-box').style.display = 'none';
+            document.getElementById('end-box').style.display = 'flex';
+
+            let correctCount = 0;
+            let mistakesHTML = '';
+
+            questions.forEach((q, i) => {
+                const userAnswer = userAnswers[i];
+                if (userAnswer === q.correctIndex) {
+                    correctCount++;
+                } else {
+                    mistakesHTML += `
+                        <div class="mistake-item">
+                            <div class="mistake-q">${formatText(q.text)}</div>
+                            <div class="mistake-user">إِجابَتُك: ${q.options[userAnswer]} (X)</div>
+                            <div class="mistake-correct">الصَّواب: ${q.options[q.correctIndex]} (✓)</div>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('final-score').innerText = `النَّتيجَة: ${correctCount} / ${questions.length}`;
+
+            const mistakesContainer = document.getElementById('mistakes-list');
+            if (mistakesHTML === '') {
+                mistakesContainer.innerHTML = '<div style="text-align:center; color:green; font-size:2rem;">مُمْتاز! أَحْسَنْتَ.</div>';
+            } else {
+                mistakesContainer.innerHTML = '<div style="font-weight:bold; margin-bottom:15px; font-size: 2.5rem; color: #c0392b;">الأَخْطاء:</div>' + mistakesHTML;
+            }
+        }
+
+        loadQuestion();
+    </script>
+
+</body>
+</html>
